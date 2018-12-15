@@ -10,16 +10,25 @@ const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
 const config = require('./config');
 const fs = require('fs');
+const _data = require('./lib/data');
+
+
+
+// TESTING
+// @TODO delete this
+_data.create('test', 'newfile', {'foo' : 'bar'}, err => {
+  console.log('This was the error', err);
+  
+})
 
 // Instantiating the HTTP server
-const httpServer = http.createServer(function(req, res) {
-  unifiendServer(req, res);
+const httpServer = http.createServer( (req, res) => {
+  unifiedServer(req, res);
 });
 
 // Start the HTTP server
-httpServer.listen(config.httpPort, function(){
-  console.log(`The server is listening on port ${config.httpPort}`);
-  
+httpServer.listen(config.httpPort, () => {
+  console.log(`The server is listening on port ${config.httpPort}`); 
 });
 
 // Instantiating the HTTPS server
@@ -29,19 +38,18 @@ const httpsServerOptions = {
 };
 
 const httpsServer = https.createServer(httpsServerOptions, function(req, res) {
-  unifiendServer(req, res);
+  unifiedServer(req, res);
 });
 
 // Start the HTTPS server
-httpsServer.listen(config.httpsPort, function(){
-  console.log(`The server is listening on port ${config.httpsPort}`);
-  
+httpsServer.listen(config.httpsPort, () => {
+  console.log(`The server is listening on port ${config.httpsPort}`); 
 });
 
 
 
 // All the server logic for both the http and https server
-const unifiendServer = function(req, res) {
+const unifiedServer = (req, res) => {
   // Get the URL and parse it
   const parsedUrl =  url.parse(req.url, true);
 
@@ -61,10 +69,10 @@ const unifiendServer = function(req, res) {
   // Get the payload, if any
   const decoder = new StringDecoder('utf-8');
   let buffer = '';
-  req.on('data', function(data){
+  req.on('data', data => {
     buffer += decoder.write(data);
   });
-  req.on('end', function(){
+  req.on('end', () => {
     buffer += decoder.end();
 
     // Choose the handler this request should go to. If one is not found, use the noFound handler
@@ -80,7 +88,7 @@ const unifiendServer = function(req, res) {
     };
 
     // Route the request to the handler specified in the router
-    chosenHandler(data, function( statusCode, payload ){
+    chosenHandler(data, ( statusCode, payload ) => {
       // Use the status code called back by the handler, or default to 200
       statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
 
@@ -105,29 +113,26 @@ const unifiendServer = function(req, res) {
 const handlers = {};
 
 // Sample handler
-handlers.sample = function( data, callback ){
+handlers.sample = ( data, callback ) => {
   // Callback a http status code, and a payload object
   callback(406, {'name' : 'sample handler'});
-
 };
 
 // Ping handler
-handlers.ping = function( data, callback ){
+handlers.ping = ( data, callback ) => {
   // Callback a http status code, and a payload object
   callback(200);
-
 };
 
 
 // Hello handler
-handlers.hello = function( data, callback ){
+handlers.hello = ( data, callback ) => {
   // Callback a http status code, and a payload object
   callback(200, {'message' : 'Hello there my friend'});
-
 };
 
 // Not found handler
-handlers.notFound = function( data, callback ){
+handlers.notFound = ( data, callback ) => {
   callback(404);
 };
 
